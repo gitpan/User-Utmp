@@ -1,0 +1,60 @@
+User::utmp
+
+Copyright © 1998 Michael Piotrowski. All Rights Reserved.
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+Description
+-----------
+
+This module provides a simple Perl interface to utmp-style databases
+on UNIX systems, the most important being /etc/utmp, which provides
+information about users currently logged in.  For more details see the
+POD documentation embedded in the file Utmp.pm.
+
+Prerequisites
+-------------
+
+Your system should be compliant with SVID2 or at least provide
+setutent(), getutent(), endutent(), utmpname() functions compliant
+with SVID2.
+
+Building the module
+-------------------
+
+The module can be built using this sequence of commands:
+
+    perl Makefile.PL
+    make
+    make test
+
+Installation
+------------
+
+    make install
+
+History
+-------
+
+User::Utmp was developed as a quick solution for a project at hand.
+It's therefore a straightforward translation of the C interface to
+Perl, but reduces the number of functions from four to two.  It has
+the following limitations:
+
+- It's not object-oriented
+- It's not reentrant and therefore not thread-safe
+- It reads the whole file
+
+User::Utmp is used extensively in an in-house project and seems to
+work well.  However, since it has not been tested elsewhere, consider
+this a beta release.
+
+Feedback
+--------
+
+User::Utmp was only tested on HP-UX 10.20.  If you are building the
+module on another architecture I would appreciate a note about how you
+got on.
+
+Michael Piotrowski <mxp@dynalabs.de>
