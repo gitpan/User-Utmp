@@ -1,4 +1,4 @@
-# @(#) $Id: Utmp.pm,v 1.11 2000/02/27 15:29:06 mxp Exp $
+# @(#) $Id: Utmp.pm,v 1.12 2000/05/06 16:47:50 mxp Exp $
 
 package User::Utmp;
 
@@ -24,7 +24,7 @@ require AutoLoader;
 		OLD_TIME
 		RUN_LVL
 		USER_PROCESS);
-$VERSION = '1.0';
+$VERSION = '1.01';
 
 sub AUTOLOAD {
     # This AUTOLOAD is used to 'autoload' constants from the constant()

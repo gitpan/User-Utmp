@@ -1,4 +1,4 @@
-#! /opt/perl5/bin/perl -w
+#! /usr/local/bin/perl -w
 
 use lib './blib/lib', './blib/arch';
 use User::Utmp;
