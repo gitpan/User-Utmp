@@ -1,4 +1,4 @@
-/* @(#) $Id: Utmp.xs,v 1.3 1998/07/24 15:48:45 mxp Exp $ */
+/* @(#) $Id: Utmp.xs,v 1.6 1999-03-26 21:29:42+01 mxp Exp $ */
 
 #ifdef __cplusplus
 extern "C" {
@@ -58,18 +58,25 @@ SV *utent2perl(struct utmp *entry)
       
    hv_store(exit_hash, "e_termination", 13,
 	    newSViv(entry->ut_exit.e_termination), 0);
-   hv_store(exit_hash, "e_exit", 6,
-	    newSViv(entry->ut_exit.e_exit), 0);
+   hv_store(exit_hash, "e_exit", 6,  newSViv(entry->ut_exit.e_exit), 0);
    hv_store(perl_hash, "ut_exit", 7, newRV_noinc((SV *) exit_hash), 0);
 
    hv_store(perl_hash, "ut_time", 7, newSViv(entry->ut_time), 0);
+
+#ifdef HAS_UT_HOST
    hv_store(perl_hash, "ut_host", 7, newSVpv(entry->ut_host, 16), 0);
+#endif
+
+#ifdef HAS_UT_ADDR
    hv_store(perl_hash, "ut_addr", 7, newSVpv((char *) &entry->ut_addr, 0), 0);
+#endif
 
    return newRV_noinc((SV *) perl_hash);
 }
 
 MODULE = User::Utmp		PACKAGE = User::Utmp		
+
+PROTOTYPES: ENABLE
 
 void
 getut()

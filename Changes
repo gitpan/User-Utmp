@@ -1,5 +1,7 @@
 Revision history for Perl extension User::Utmp.
 
-0.01  Fri Feb 27 19:20:35 1998
+0.01  Fri Feb 27 18:20:35 UTC 1998
 	- original version; created by h2xs 1.18
 
+0.02  Mon Mar 22 20:32:24 UTC 1999
+	- should now compile on Solaris and Linux

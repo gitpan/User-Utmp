@@ -1,4 +1,4 @@
-# @(#) $Id: Utmp.pm,v 1.5 1999-02-22 20:11:08+01 mxp Exp $
+# @(#) $Id: Utmp.pm,v 1.6 1999-03-22 21:35:06+01 mxp Exp $
 
 package User::Utmp;
 
@@ -15,7 +15,7 @@ require AutoLoader;
 # names by default without a very good reason. Use EXPORT_OK instead.
 # Do not simply export all your public functions/methods/constants.
 @EXPORT_OK = qw(getut utmpname);
-$VERSION = '0.01';
+$VERSION = '0.02';
 
 sub AUTOLOAD {
     # This AUTOLOAD is used to 'autoload' constants from the constant()

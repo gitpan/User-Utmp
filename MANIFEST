@@ -4,4 +4,7 @@ Makefile.PL
 README
 Utmp.pm
 Utmp.xs
+hints/hpux.pl
+hints/linux.pl
 test.pl
+example.pl
