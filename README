@@ -1,6 +1,6 @@
 User::utmp
 
-Copyright © 1998 Michael Piotrowski. All Rights Reserved.
+Copyright © 2000 Michael Piotrowski.  All Rights Reserved.
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
@@ -8,10 +8,12 @@ it under the same terms as Perl itself.
 Description
 -----------
 
-This module provides a simple Perl interface to utmp-style databases
-on UNIX systems, the most important being /etc/utmp, which provides
-information about users currently logged in.  For more details see the
-POD documentation embedded in the file Utmp.pm.
+This module provides a simple Perl interface to utmp- and utmpx-style
+databases on UNIX systems, the most important being /etc/utmp, which
+provides information about users currently logged in.  There is also
+experimental support for writing utmp files.  For further details see
+the POD documentation embedded in the file Utmp.pm, which will also be
+installed as User::Utmp(3) manpage, and the example.pl script.
 
 Prerequisites
 -------------
@@ -20,23 +22,38 @@ Your system should be compliant with SVID2 or at least provide
 setutent(), getutent(), endutent(), utmpname() functions compliant
 with SVID2.
 
+Utmpx is supported if your system complies with the Single UNIX
+Specification.
+
+Hint files are provided for AIX, HP-UX, Linux, and Solaris.  If you're
+using a system for which there is no hint file, User::Utmp will be
+built with basic utmp support, and, if the _XOPEN_UNIX macro is
+defined, with basic utmpx support.  If you want to use additional
+fields provided by your system's implementation, you'll have to define
+the appropriate flags.
+
+BSD systems typically provide no utmp functions at all and are thus
+unsupported.
+
 Portability note
 ----------------
 
-Unfortunately, the contents of the Utmp structure are highly
+Unfortunately, the contents of the utmp structure are highly
 system-dependent, making multi-platform support difficult.
 
-Using Utmpx instead looks like a good idea because it is standardized
-by XPG4.  However, Utmpx is not yet universally supported.
+Utmpx is formally standardized, but the definition leaves a lot of
+things to the implementation.
 
-User::Utmp now uses hint files (see the hints directory and the
+Therefore User::Utmp uses hint files (see the hints directory and the
 ExtUtils::MakeMaker man page) to control the inclusion of
 system-dependent code.  Note that the Linux hint file enables support
 for the ut_host and ut_addr fields; these fields exist on the system I
 tested it, which is fairly recent.  Older versions of Linux seem to
-have much more limited Utmp implementations.  I'd appreciate a note if
-you know of ways to support those without having to parse the header
-files.
+have much more limited Utmp implementations.
+
+There might be problems with utmpname() on Solaris due to the
+underlying utmpxname(3) function.  I'd appreciate any information on
+this matter.
 
 Building the module
 -------------------
@@ -47,9 +64,17 @@ The module can be built using this sequence of commands:
     make
     make test
 
-"make test" just tests if the module is loadable, since I don't have a
-good idea for portable tests.  I've included the script example.pl
-instead, which is a variation of what I use for testing.
+Besides testing if the module is loadable, "make test" currently
+contains only one other test.  This test checks if a utmp record
+matching the current user and tty can be found.  I *think* this is
+pretty portable, but if it fails, it might be because that the
+assumptions made by the test do not apply to your system, not because
+User::Utmp doesn't work.
+
+I'd appreciate any ideas for portable tests.
+
+Also included is the script example.pl, which can be used for further
+testing.
 
 Installation
 ------------
@@ -61,22 +86,18 @@ History
 
 User::Utmp was developed as a quick solution for a project at hand.
 It's therefore a straightforward translation of the C interface to
-Perl, but reduces the number of functions from four to two.  It has
-the following limitations:
+Perl, but reduces the number of functions from four to two.  It
+currently has the following limitations:
 
 - It's not object-oriented
 - It's not reentrant and therefore not thread-safe
 - It reads the whole file
 
-User::Utmp is used extensively in an in-house project and seems to
-work well.  However, since it has not been tested elsewhere, consider
-this a beta release.
-
 Feedback
 --------
 
-User::Utmp was tested on HP-UX 10.20, Solaris 2.5.1, and Linux 2.0.36.
-If you are building the module on another architecture I'd appreciate
-a note about how you got on.
+User::Utmp was tested on HP-UX 10.20, Solaris 2.5.1 and 7 and Linux
+2.0.36, and reported to work on AIX.  If you are building the module
+on another architecture I'd appreciate a note about how you got on.
 
 Michael Piotrowski <mxp@dynalabs.de>

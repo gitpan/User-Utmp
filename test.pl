@@ -6,7 +6,7 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; print "1..1\n"; }
+BEGIN { $| = 1; print "1..2\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use User::Utmp;
 $loaded = 1;
@@ -18,3 +18,20 @@ print "ok 1\n";
 # (correspondingly "not ok 13") depending on the success of chunk 13
 # of the test code):
 
+$user = $ENV{USER};
+$term = `tty`;
+@utmp = User::Utmp::getut();
+
+$found = 0;
+
+foreach $entry (@utmp)
+{
+   if ($entry->{ut_type} == USER_PROCESS and
+       $entry->{ut_user} eq $user and
+       $term =~ $entry->{ut_line})
+   {
+      $found = 1
+   }
+}
+
+print $found ? "" : "not ", "ok 2\n";
