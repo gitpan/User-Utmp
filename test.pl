@@ -6,7 +6,7 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; print "1..2\n"; }
+BEGIN { $| = 1; print "1..3\n"; }
 END {print "not ok 1\n" unless $loaded;}
 use User::Utmp;
 $loaded = 1;
@@ -14,24 +14,61 @@ print "ok 1\n";
 
 ######################### End of black magic.
 
-# Insert your test code below (better if it prints "ok 13"
-# (correspondingly "not ok 13") depending on the success of chunk 13
-# of the test code):
+$user = getlogin || getpwuid($<) || $ENV{USER};
+chomp ($term = `tty`);
 
-$user = $ENV{USER};
-$term = `tty`;
+###############################################################################
+
 @utmp = User::Utmp::getut();
 
 $found = 0;
 
 foreach $entry (@utmp)
 {
-   if ($entry->{ut_type} == USER_PROCESS and
-       $entry->{ut_user} eq $user and
-       $term =~ $entry->{ut_line})
+   if ($entry->{ut_type} == USER_PROCESS)
    {
-      $found = 1
+      $found++ if $entry->{ut_user} eq $user;
+      $found++ if $term =~ $entry->{ut_line};
    }
 }
 
-print $found ? "" : "not ", "ok 2\n";
+print $found ? "" : "not ", "ok 2 ";
+
+if (not $found)
+{
+   print "(Could not find entry for user $user and/or line $term)"
+}
+
+print "\n";
+
+###############################################################################
+
+if (User::Utmp::HAS_UTMPX())
+{
+   @utmp = User::Utmp::getut();
+
+   $found = 0;
+
+   foreach $entry (@utmp)
+   {
+      if ($entry->{ut_type} == USER_PROCESS)
+      {
+	 $found++ if $entry->{ut_user} eq $user;
+	 $found++ if $term =~ $entry->{ut_line};
+      }
+   }
+
+   print $found ? "" : "not ", "ok 3 ";
+
+   if (not $found)
+   {
+      print "(Could not find entry for user $user and/or line $term)"
+   }
+
+   print "\n";
+
+}
+else
+{
+   print "skipped 3 (utmpx not available on this system)\n";
+}

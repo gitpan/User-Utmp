@@ -1,6 +1,6 @@
 User::utmp
 
-Copyright © 2000 Michael Piotrowski.  All Rights Reserved.
+Copyright © 2001 Michael Piotrowski.  All Rights Reserved.
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.
@@ -41,8 +41,8 @@ Portability note
 Unfortunately, the contents of the utmp structure are highly
 system-dependent, making multi-platform support difficult.
 
-Utmpx is formally standardized, but the definition leaves a lot of
-things to the implementation.
+Utmpx is formally standardized, but the definition leaves many details
+to the implementation.
 
 Therefore User::Utmp uses hint files (see the hints directory and the
 ExtUtils::MakeMaker man page) to control the inclusion of
@@ -66,10 +66,11 @@ The module can be built using this sequence of commands:
 
 Besides testing if the module is loadable, "make test" currently
 contains only one other test.  This test checks if a utmp record
-matching the current user and tty can be found.  I *think* this is
-pretty portable, but if it fails, it might be because that the
-assumptions made by the test do not apply to your system, not because
-User::Utmp doesn't work.
+matching the current user and tty can be found.  If utmpx is
+available, the same test is also done using utmpx functions.  I
+*think* this is pretty portable, but if it fails, it might be because
+that the assumptions made by the test do not apply to your system, not
+because User::Utmp doesn't work.
 
 I'd appreciate any ideas for portable tests.
 

@@ -1,4 +1,4 @@
-# @(#) $Id: Utmp.pm,v 1.12 2000/05/06 16:47:50 mxp Exp $
+# @(#) $Id: Utmp.pm 1.1.1.2 Sun, 16 Sep 2001 23:26:31 +0200 mxp $
 
 package User::Utmp;
 
@@ -14,7 +14,7 @@ require AutoLoader;
 # Items to export into callers namespace by default. Note: do not export
 # names by default without a very good reason. Use EXPORT_OK instead.
 # Do not simply export all your public functions/methods/constants.
-@EXPORT_OK = qw(getut putut utmpname);
+@EXPORT_OK = qw(getut putut utmpname HAS_UTMPX);
 @EXPORT    = qw(BOOT_TIME
 		DEAD_PROCESS
 		EMPTY
@@ -24,7 +24,8 @@ require AutoLoader;
 		OLD_TIME
 		RUN_LVL
 		USER_PROCESS);
-$VERSION = '1.01';
+# $Format: "$VERSION='$ProjectVersion$';"$
+$VERSION='1.6';
 
 sub AUTOLOAD {
     # This AUTOLOAD is used to 'autoload' constants from the constant()
@@ -40,7 +41,7 @@ sub AUTOLOAD {
 	    goto &AutoLoader::AUTOLOAD;
 	}
 	else {
-		croak "Your vendor has not defined User::Utmp macro $constname";
+	   croak "Your vendor has not defined User::Utmp macro $constname";
 	}
     }
     eval "sub $AUTOLOAD { $val }";
@@ -88,7 +89,7 @@ functions are provided:
 Reads a utmp-like file and converts it to a Perl array of hashes.
 Each array element (a reference to a hash) represents one utmp record.
 The hash keys are the names of the elements of the utmp structure as
-described in utmp(4).  The hash values are the same as in C.
+described in utmp(4).  The hash values are (mostly) the same as in C.
 
 Note that even if C<ut_addr> (if provided by the utmp implementation)
 is declared as I<long>, it contains an Internet address (four bytes in
@@ -101,8 +102,8 @@ describe a remote login C<ut_addr> is the empty string.
 Reads a utmpx-like file and converts it to a Perl array of hashes.
 Each array element (a reference to a hash) represents one utmp record.
 The hash keys are the names of the elements of the utmpx structure as
-described in utmpx(4) or getutx(3).  The hash values are the same as
-in C.
+described in utmpx(4) or getutx(3).  The hash values are (mostly) the
+same as in C.
 
 Note that even if C<ut_addr> (if provided by the utmpx implementation)
 is declared as I<long>, it contains an Internet address (four bytes in
@@ -136,6 +137,8 @@ OLD_TIME RUN_LVL USER_PROCESS
 =back
 
 EMPTY is also use on Linux (instead of the non-standard UT_UNKNOWN).
+Additionally, the function User::Utmp::HAS_UTMPX() returns 1 if
+User::Utmp was built with utmpx support.
 
 =head1 RESTRICTIONS
 

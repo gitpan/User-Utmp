@@ -1,4 +1,4 @@
-/* @(#) $Id: Utmp.xs,v 1.14 2000/02/27 13:43:43 mxp Exp $ */
+/* @(#) $Id: Utmp.xs 1.4 Mon, 17 Sep 2001 17:14:49 +0200 mxp $ */
 
 #ifdef __cplusplus
 extern "C" {
@@ -11,6 +11,13 @@ extern "C" {
 #endif
 
 #include <utmp.h>
+
+/* Handle older Linux versions with UT_UNKNOWN instead of EMPTY */
+#ifndef EMPTY
+#ifdef  UT_UNKNOWN
+#define EMPTY UT_UNKNOWN
+#endif
+#endif
 
 #ifdef _XOPEN_UNIX
 #define HAS_UTMPX
@@ -44,92 +51,98 @@ char *s;
     return -1;
 }
 
-static double
-constant(name, arg)
-char *name;
-int arg;
+static int
+constant(char *name, int arg)
 {
-    errno = 0;
-    switch (*name) {
-    case 'B':
-	if (strEQ(name, "BOOT_TIME"))
+   errno = 0;
+   switch (*name)
+   {
+      case 'B':
+	 if (strEQ(name, "BOOT_TIME"))
 #ifdef BOOT_TIME
 	    return BOOT_TIME;
 #else
-	    goto not_there;
+	 goto not_there;
 #endif
-	break;
-    case 'D':
-	if (strEQ(name, "DEAD_PROCESS"))
+	 break;
+      case 'D':
+	 if (strEQ(name, "DEAD_PROCESS"))
 #ifdef DEAD_PROCESS
 	    return DEAD_PROCESS;
 #else
-	    goto not_there;
+	 goto not_there;
 #endif
-	break;
-    case 'E':
-	if (strEQ(name, "EMPTY"))
+	 break;
+      case 'E':
+	 if (strEQ(name, "EMPTY"))
 #ifdef EMPTY
 	    return EMPTY;
 #else
-	    goto not_there;
+	 goto not_there;
 #endif
-	break;
-    case 'I':
-	if (strEQ(name, "INIT_PROCESS"))
-#ifdef INIT_PROCESS
-	    return INIT_PROCESS;
+	 break;
+      case 'H':
+	 if (strEQ(name, "HAS_UTMPX"))
+#ifdef HAS_UTMPX
+	    return 1;
 #else
-	    goto not_there;
+	 return 0;
 #endif
-	break;
-    case 'L':
-	if (strEQ(name, "LOGIN_PROCESS"))
+	    case 'I':
+   if (strEQ(name, "INIT_PROCESS"))
+#ifdef INIT_PROCESS
+      return INIT_PROCESS;
+#else
+	 goto not_there;
+#endif
+	 break;
+      case 'L':
+	 if (strEQ(name, "LOGIN_PROCESS"))
 #ifdef LOGIN_PROCESS
 	    return LOGIN_PROCESS;
 #else
-	    goto not_there;
+	 goto not_there;
 #endif
-	break;
-    case 'N':
-	if (strEQ(name, "NEW_TIME"))
+	 break;
+      case 'N':
+	 if (strEQ(name, "NEW_TIME"))
 #ifdef NEW_TIME
 	    return NEW_TIME;
 #else
-	    goto not_there;
+	 goto not_there;
 #endif
-	break;
-    case 'O':
-	if (strEQ(name, "OLD_TIME"))
+	 break;
+      case 'O':
+	 if (strEQ(name, "OLD_TIME"))
 #ifdef OLD_TIME
 	    return OLD_TIME;
 #else
-	    goto not_there;
+	 goto not_there;
 #endif
-	break;
-    case 'R':
-	if (strEQ(name, "RUN_LVL"))
+	 break;
+      case 'R':
+	 if (strEQ(name, "RUN_LVL"))
 #ifdef RUN_LVL
 	    return RUN_LVL;
 #else
-	    goto not_there;
+	 goto not_there;
 #endif
-	break;
-    case 'U':
-	if (strEQ(name, "USER_PROCESS"))
+	 break;
+      case 'U':
+	 if (strEQ(name, "USER_PROCESS"))
 #ifdef USER_PROCESS
 	    return USER_PROCESS;
 #else
-	    goto not_there;
+	 goto not_there;
 #endif
-	break;
-    }
-    errno = EINVAL;
-    return 0;
+	 break;
+   }
+   errno = EINVAL;
+   return 0;
 
-not_there:
-    errno = ENOENT;
-    return 0;
+  not_there:
+   errno = ENOENT;
+   return 0;
 }
 
 
@@ -162,7 +175,10 @@ SV *utent2perl(struct utmp *entry)
 #endif
 
 #ifdef HAS_UT_ADDR
-   hv_store(perl_hash, "ut_addr", 7, newSVpv((char *) &entry->ut_addr, 0), 0);
+   if (entry->ut_addr)
+      hv_store(perl_hash, "ut_addr", 7, newSVpv((char *) &entry->ut_addr, 4), 0);
+   else
+      hv_store(perl_hash, "ut_addr", 7, newSVpv("", 0), 0);
 #endif
 
    return newRV_noinc((SV *) perl_hash);
@@ -215,7 +231,10 @@ SV *utxent2perl(struct utmpx *entry)
 #endif
 #endif
 #ifdef HAS_X_UT_ADDR
-   hv_store(perl_hash, "ut_addr", 7, newSViv(entry->ut_addr), 0);
+   if (entry->ut_addr)
+      hv_store(perl_hash, "ut_addr", 7, newSVpv((char *) &entry->ut_addr, 4), 0);
+   else
+      hv_store(perl_hash, "ut_addr", 7, newSVpv("", 0), 0);
 #endif
    return newRV_noinc((SV *) perl_hash);
 }
@@ -316,8 +335,8 @@ PROTOTYPES: ENABLE
 
 double
 constant(name,arg)
-	char *		name
-	int		arg
+   char * name
+   int    arg
 
 void
 getut()
@@ -330,6 +349,22 @@ getut()
 	 XPUSHs(sv_2mortal(utent2perl(entry)));
       }
       endutent();
+
+void
+getutline(linestring)
+   char *linestring
+   PREINIT:
+      struct utmp line;
+      struct utmp *entry;
+   PPCODE:
+      strcpy((&line)->ut_line, linestring);
+      entry = getutline(&line);
+      XPUSHs(sv_2mortal(utent2perl(entry)));
+
+void
+setutent()
+   CODE:
+      setutent();
 
 #ifdef HAS_UTMPX
 void
@@ -352,7 +387,7 @@ putut(perl_hash)
    PREINIT:
       struct utmp entry;
    CODE:
-      setutent();
+      /* setutent(); */
       perl2utent((HV *) SvRV(perl_hash), &entry);
       pututline(&entry);
       endutent();
