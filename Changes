@@ -30,3 +30,19 @@ Revision history for Perl extension User::Utmp.
 	  file (it wasn't defined on older Linux versions); if
 	  necessary it's defined in Utmp.xs
 	- tests should be more robust
+
+1.7	Tue Sep 20 10:12:03 UTC 2005
+	- In Utmp.xs, the tv_usec field was assigned the value of tv_sec
+
+1.8	Sun Mar 26 23:42:44 UTC 2006
+	- For compatibility with utmp, the utmpx read functions
+	  generate a ut_time field; it can also be specified in the
+	  argument to pututxline()
+	- Added support for NetBSD (hints file and various #ifdefs)
+	- Added Perl interfaces for all functions defined in the
+	  Single UNIX Specification Version 3 (namely: endutxent(),
+	  getutxent(), getutxid(), getutxline(), pututxline(), and
+	  setutxent())
+	- Extended documentation; it now also says that utmpx is
+	  preferred
+	- Enhanced test.pl

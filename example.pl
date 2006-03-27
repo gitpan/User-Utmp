@@ -1,35 +1,35 @@
-#! /usr/local/bin/perl -w
+#! /usr/bin/perl -w
 
-# #(@) $Id: example.pl 1.2 Sun, 16 Sep 2001 23:26:31 +0200 mxp $
+# #(@) $Id: example.pl 1.3 Mon, 27 Mar 2006 02:20:00 +0200 mxp $
 # Example program illustrating the use of User::Utmp.
 
 use lib './blib/lib', './blib/arch';
 use Getopt::Std;
-use User::Utmp;
+use User::Utmp qw(:constants);
 use Socket;
 use strict;
 
-my %options; getopts('a:hux', \%options);
+my %options; getopts('f:hux', \%options);
 
 my @utmp;
-my %ut_type = (BOOT_TIME() => "BOOT_TIME",
-	       DEAD_PROCESS() => "DEAD_PROCESS",
-	       EMPTY() => "EMPTY",
-	       INIT_PROCESS() => "INIT_PROCESS",
+my %ut_type = (BOOT_TIME()     => "BOOT_TIME",
+	       DEAD_PROCESS()  => "DEAD_PROCESS",
+	       EMPTY()         => "EMPTY",
+	       INIT_PROCESS()  => "INIT_PROCESS",
 	       LOGIN_PROCESS() => "LOGIN_PROCESS",
-	       NEW_TIME() => "NEW_TIME",
-	       OLD_TIME() => "OLD_TIME",
-	       RUN_LVL() => "RUN_LVL",
-	       USER_PROCESS() => "USER_PROCESS");
+	       NEW_TIME()      => "NEW_TIME",
+	       OLD_TIME()      => "OLD_TIME",
+	       RUN_LVL()       => "RUN_LVL",
+	       USER_PROCESS()  => "USER_PROCESS");
 
 ###############################################################################
 
 if ($options{h})
 {
-   print "Usage: $0 [-a <file>] [-hux]\n";
+   print "Usage: $0 [-f <file>] [-hux]\n";
    print <<EOT;
 
-       -a <file> Use alternative utmp/utmpx file named <file>
+       -f <file> Use alternative utmp/utmpx file named <file>
        -h        Show this help message and exit
        -u        Show only records of type USER_PROCESS
        -x        Use utmpx
@@ -37,9 +37,16 @@ EOT
     exit;
 }
 
-if ($options{a})
+if ($options{f})
 {
-   User::Utmp::utmpname($options{a});
+   if ($options{x} && User::Utmp::HAS_UTMPX())
+   {
+      User::Utmp::utmpxname($options{f});
+   }
+   else
+   {
+      User::Utmp::utmpname($options{f});
+   }
 }
 
 if ($options{x})
@@ -79,15 +86,12 @@ foreach my $entry (@utmp)
 	    }
 	    elsif ($key eq "ut_time" and $value)
 	    {
-	       if ($options{x})
-	       {
-		  $value = localtime($value->{tv_sec}) .
-		      " (" . $value->{tv_usec} . " µs)";
-	       }
-	       else
-	       {
-		  $value = scalar(localtime($value));
-	       }
+	       $value = scalar(localtime($value));
+	    }
+	    elsif ($key eq "ut_tv" and $value) # utmpx only
+	    {
+	       $value = localtime($value->{tv_sec}) .
+		   " (" . $value->{tv_usec} . " µs)";
 	    }
 	    elsif ($key eq "ut_exit")
 	    {

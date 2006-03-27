@@ -6,44 +6,24 @@
 # Change 1..1 below to 1..last_test_to_print .
 # (It may become useful if the test is moved to ./t subdirectory.)
 
-BEGIN { $| = 1; print "1..3\n"; }
+BEGIN { $| = 1; print "1..4\n"; }
 END {print "not ok 1\n" unless $loaded;}
-use User::Utmp;
+use User::Utmp qw(:constants);
+use POSIX qw(ttyname);
 $loaded = 1;
 print "ok 1\n";
 
 ######################### End of black magic.
 
 $user = getlogin || getpwuid($<) || $ENV{USER};
-chomp ($term = `tty`);
+$term = ttyname(undef);
+$term =~ s|^/dev/||;
 
 ###############################################################################
 
-@utmp = User::Utmp::getut();
+$test = 2;
 
-$found = 0;
-
-foreach $entry (@utmp)
-{
-   if ($entry->{ut_type} == USER_PROCESS)
-   {
-      $found++ if $entry->{ut_user} eq $user;
-      $found++ if $term =~ $entry->{ut_line};
-   }
-}
-
-print $found ? "" : "not ", "ok 2 ";
-
-if (not $found)
-{
-   print "(Could not find entry for user $user and/or line $term)"
-}
-
-print "\n";
-
-###############################################################################
-
-if (User::Utmp::HAS_UTMPX())
+unless (UTMP_FILE && -z UTMP_FILE)
 {
    @utmp = User::Utmp::getut();
 
@@ -54,15 +34,45 @@ if (User::Utmp::HAS_UTMPX())
       if ($entry->{ut_type} == USER_PROCESS)
       {
 	 $found++ if $entry->{ut_user} eq $user;
-	 $found++ if $term =~ $entry->{ut_line};
+	 $found++ if $entry->{ut_line} =~ $term;
       }
    }
 
-   print $found ? "" : "not ", "ok 3 ";
+   print $found ? "" : "not ", "ok 2 ";
 
    if (not $found)
    {
-      print "(Could not find entry for user $user and/or line $term)"
+      print "(Could not find utmp entry for user $user and/or line $term)";
+   }
+
+   print "\n";
+}
+else
+{
+   print "skipped $test (empty utmp file)\n";
+}
+
+###############################################################################
+
+$test++;
+
+if (User::Utmp::HAS_UTMPX())
+{
+   $entry = User::Utmp::getutxline($term);
+
+   $found = 0;
+
+   if ($entry)
+   {
+      $found++ if $entry->{ut_user} eq $user;
+      $found++ if $entry->{ut_line} =~ $term;
+   }
+
+   print $found ? "" : "not ", "ok $test ";
+
+   if (not $found)
+   {
+      print "(Could not find utmpx entry for user $user and/or line $term)";
    }
 
    print "\n";
@@ -70,5 +80,93 @@ if (User::Utmp::HAS_UTMPX())
 }
 else
 {
-   print "skipped 3 (utmpx not available on this system)\n";
+   print "skipped $test (utmpx not available on this system)\n";
 }
+
+###############################################################################
+
+$test++;
+
+if (User::Utmp::HAS_UTMPX())
+{
+   @utmp = User::Utmp::getutx();
+
+   $found = 0;
+
+   foreach $entry (@utmp)
+   {
+      if ($entry->{ut_type} == USER_PROCESS)
+      {
+	 $found++ if $entry->{ut_user} eq $user;
+	 $found++ if $entry->{ut_line} =~ $term;
+      }
+   }
+
+   print $found ? "" : "not ", "ok $test ";
+
+   if (not $found)
+   {
+      print "(Could not find utmpx entry for user $user and/or line $term)";
+   }
+
+   print "\n";
+
+}
+else
+{
+   print "skipped $test (utmpx not available on this system)\n";
+}
+
+###############################################################################
+
+$test++;
+
+if (User::Utmp::HAS_UTMPX())
+{
+   open(FH, '>', 'wtmpx');
+   close(FH);
+
+   %entry = (ut_type => BOOT_TIME,
+	     ut_line => 'system boot',
+	     #ut_pid  => undef,
+	     ut_id   => '-',
+	     ut_user => 'reboot',
+	     #ut_time => time,
+	     #ut_exit => {e_termination => 1, e_exit => 2},
+	     #ut_tv => {tv_sec => 79200000, tv_usec => 43},
+	    );
+
+   User::Utmp::utmpxname('wtmpx');
+   User::Utmp::pututxline(\%entry);
+
+   @utmp = User::Utmp::getutx();
+
+   $found = 0;
+
+   foreach $entry (@utmp)
+   {
+      if ($entry->{ut_type} == BOOT_TIME)
+      {
+	 $found++ if $entry->{ut_user} eq 'reboot';
+	 $found++ if $entry->{ut_line} eq 'system boot';
+      }
+   }
+
+   unlink 'wtmpx';
+
+   print $found ? "" : "not ", "ok $test ";
+
+   if (not $found)
+   {
+      print "(Could not find utmpx entry I just wrote)";
+   }
+
+   print "\n";
+
+}
+else
+{
+   print "skipped $test (utmpx not available on this system)\n";
+}
+
+###############################################################################
